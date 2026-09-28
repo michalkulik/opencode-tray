@@ -3,12 +3,13 @@ Unicode true
 SetCompressor /SOLID lzma
 
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
 !include "FileFunc.nsh"
 
 !define APP_NAME "OpenCode Tray"
 !define APP_EXE "OpenCodeTray.exe"
 !define APP_ID "OpenCodeTray"
-!define APP_VERSION "1.1.0"
+!define APP_VERSION "1.2.0"
 !define APP_PUBLISHER "michalkulik"
 !define APP_URL "https://github.com/michalkulik/opencode-tray"
 !define RUN_KEY "Software\Microsoft\Windows\CurrentVersion\Run"
@@ -20,7 +21,7 @@ InstallDir "$LOCALAPPDATA\Programs\${APP_NAME}"
 InstallDirRegKey HKCU "Software\${APP_ID}" "InstallDir"
 RequestExecutionLevel user
 
-VIProductVersion "1.1.0.0"
+VIProductVersion "1.2.0.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "FileDescription" "${APP_NAME} Setup"
 VIAddVersionKey "FileVersion" "${APP_VERSION}"
@@ -46,10 +47,54 @@ VIAddVersionKey "LegalCopyright" "© ${APP_PUBLISHER}"
 Function .onInit
   ; Detect a previous per-machine install and fail clearly instead of mixing.
   ReadRegStr $0 HKLM "${UNINST_KEY}" "InstallLocation"
-  StrCmp $0 "" done
+  StrCmp $0 "" checkRuntime
   MessageBox MB_OK|MB_ICONSTOP "OpenCode Tray jest już zainstalowany dla wszystkich użytkowników. Odinstaluj poprzednią wersję i spróbuj ponownie."
   Abort
-done:
+
+checkRuntime:
+  ; The app is framework-dependent: it needs .NET Desktop Runtime 8.0 or newer.
+  Call HasDesktopRuntime
+  StrCmp $R0 1 runtimeOk
+  MessageBox MB_YESNO|MB_ICONINFORMATION "Na tym komputerze nie znaleziono .NET Desktop Runtime (8.0 lub nowszy), którego wymaga OpenCode Tray.$\n$\nBez niego aplikacja się nie uruchomi.$\n$\nKliknij „Tak”, aby otworzyć stronę pobrania runtime'u i kontynuować instalację, albo „Nie”, aby anulować." IDNO abortInstall
+  ExecShell "open" "https://dotnet.microsoft.com/download/dotnet/8.0"
+  Goto runtimeOk
+
+abortInstall:
+  Abort
+
+runtimeOk:
+FunctionEnd
+
+; ---------------------------------------------------------------------------
+; Returns $R0 = 1 when a supported Desktop Runtime is present for this machine.
+; $PROGRAMFILES64\dotnet  -> machine-wide install
+; $LOCALAPPDATA\Microsoft\dotnet -> per-user install
+; ---------------------------------------------------------------------------
+Function HasDesktopRuntime
+  StrCpy $R0 0
+
+  StrCpy $R1 "$PROGRAMFILES64\dotnet\shared\Microsoft.WindowsDesktop.App"
+  Call CheckRuntimeDir
+  StrCmp $R0 1 hasRuntime
+
+  StrCpy $R1 "$LOCALAPPDATA\Microsoft\dotnet\shared\Microsoft.WindowsDesktop.App"
+  Call CheckRuntimeDir
+
+hasRuntime:
+FunctionEnd
+
+Function CheckRuntimeDir
+  ${If} ${FileExists} "$R1\8.0.*"
+    StrCpy $R0 1
+  ${ElseIf} ${FileExists} "$R1\9.0.*"
+    StrCpy $R0 1
+  ${ElseIf} ${FileExists} "$R1\10.0.*"
+    StrCpy $R0 1
+  ${ElseIf} ${FileExists} "$R1\11.0.*"
+    StrCpy $R0 1
+  ${ElseIf} ${FileExists} "$R1\12.0.*"
+    StrCpy $R0 1
+  ${EndIf}
 FunctionEnd
 
 Function CloseRunningApp

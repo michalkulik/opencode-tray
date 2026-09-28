@@ -34,11 +34,17 @@ szczegółami (procent wykorzystania, pasek postępu i czas do resetu).
 
 1. Pobierz `OpenCodeTray-Setup-<wersja>.exe` z sekcji
    [Releases](https://github.com/michalkulik/opencode-tray/releases).
+   Instalator ma ~250 KB.
 2. Uruchom instalator. Aplikacja instaluje się w
    `%LOCALAPPDATA%\Programs\OpenCode Tray` i domyślnie dodaje się do autostartu.
 3. Kliknij ikonę w zasobniku prawym przyciskiem → **Ustawienia…** i wklej swój
    klucz API OpenCode Go (do pobrania na <https://opencode.ai/auth>).
 4. Ustaw częstotliwość odświeżania (domyślnie 5 minut) i zapisz.
+
+> **Wymagania:** Windows 10 (x64) lub nowszy oraz **.NET Desktop Runtime 8.0
+> lub nowszy**. Instalator sam sprawdza, czy runtime jest zainstalowany —
+> jeśli go brakuje, oferuje otwarcie strony pobrania. Runtime jest darmowy i
+> instaluje się raz, wspólnie dla wszystkich aplikacji .NET.
 
 Aby zobaczyć panel limitów — najedź kursorem na ikonę w zasobniku.
 
@@ -98,7 +104,18 @@ dotnet publish src/OpenCodeTray/OpenCodeTray.csproj -c Release -o src/OpenCodeTr
 makensis installer/installer.nsi
 ```
 
-Wynik: `dist\OpenCodeTray-Setup-1.0.0.exe`.
+Wynik: `dist\OpenCodeTray-Setup-1.2.0.exe`.
+
+### Dlaczego instalator ma ~250 KB
+
+Aplikacja jest **framework-dependent**, więc instalator nie zawiera runtime'u —
+sam `OpenCodeTray.exe` to ~257 KB. Wariant `SelfContained=true` ważyłby 62.8 MB
+(runtime .NET 8 Windows Desktop), a `PublishTrimmed` i `PublishAot` nie są
+obsługiwane dla WinForms, więc odchudzenie tego samego buildu nie jest możliwe.
+
+Chcąc zrezygnować z runtime'u na maszynie użytkownika, zmień w `.csproj`
+`<SelfContained>false</SelfContained>` na `true` — instalator urośnie do ~60 MB,
+ale nie będzie wymagał żadnych zależności.
 
 Na Linuksie można zbudować dokładnie to samo (bez uruchamiania aplikacji),
 ponieważ projekt ma włączone `EnableWindowsTargeting`, a `makensis` potrafi
