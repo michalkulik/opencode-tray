@@ -21,6 +21,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private string? _error;
     private bool _wasRateLimited;
     private bool _disposed;
+    private bool _menuOpen;
 
     public TrayApplicationContext(AppSettings settings)
     {
@@ -54,6 +55,15 @@ public sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(exitItem);
 
+        // Keep the popup from floating above the context menu: while the menu is
+        // open the tray icon keeps receiving WM_MOUSEMOVE, which would re-show it.
+        menu.Opening += (_, _) =>
+        {
+            _menuOpen = true;
+            HidePopup();
+        };
+        menu.Closed += (_, _) => _menuOpen = false;
+
         _notifyIcon = new NotifyIcon
         {
             Icon = IconResources.Normal,
@@ -62,6 +72,7 @@ public sealed class TrayApplicationContext : ApplicationContext
             ContextMenuStrip = menu,
         };
         _notifyIcon.MouseMove += (_, _) => ShowPopup();
+        _notifyIcon.MouseDown += (_, _) => HidePopup();
         _notifyIcon.MouseClick += (_, e) =>
         {
             if (e.Button == MouseButtons.Left)
@@ -70,7 +81,6 @@ public sealed class TrayApplicationContext : ApplicationContext
                 _ = RefreshAsync();
             }
         };
-        menu.Opening += (_, _) => HidePopup();
 
         _refreshTimer = new System.Windows.Forms.Timer
         {
@@ -179,6 +189,11 @@ public sealed class TrayApplicationContext : ApplicationContext
 
     private void ShowPopup()
     {
+        if (_menuOpen || _disposed)
+        {
+            return;
+        }
+
         if (_snapshot is null && _error is null)
         {
             return;
