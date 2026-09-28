@@ -23,6 +23,8 @@ szczegółami (procent wykorzystania, pasek postępu i czas do resetu).
   ikona zmienia się na alertową, gdy któryś limit zostanie osiągnięty.
 - Powiadomienie systemowe po osiągnięciu limitu (opcjonalne).
 - Menu kontekstowe: odświeżanie, ustawienia, link do konsoli OpenCode, autostart, wyjście.
+- W oknie **Ustawienia → zakładka „Szczegóły”** tabela z rozbiem limitów:
+  procent, status, dokładna data resetu i czas, jaki do niego pozostał.
 - Uruchamianie automatycznie przy starcie systemu Windows (można przełączać).
 - Ustawienia: klucz API OpenCode Go oraz częstotliwość odświeżania w minutach.
 - Instalator (NSIS), instalacja per-user — **bez uprawnień administratora**.
@@ -50,7 +52,26 @@ Authorization: Bearer <klucz API>
 ```
 
 Odpowiedź zawiera trzy okna limitów (`rolling` = 5 godzin, `weekly`, `monthly`),
-a dla każdego z nich `status`, `percent` oraz `resetsAt`.
+a dla każdego z nich `status`, `percent` oraz `resetsAt`:
+
+```json
+{
+  "usage": {
+    "rolling":  { "status": "ok", "percent": 4,  "resetsAt": "2026-09-28T09:44:10.048Z" },
+    "weekly":   { "status": "ok", "percent": 1,  "resetsAt": "2026-10-05T00:00:00.000Z" },
+    "monthly":  { "status": "ok", "percent": 66, "resetsAt": "2026-10-16T19:06:53.000Z" }
+  }
+}
+```
+
+### Czego API **nie** udostępnia
+
+Kluczem API OpenCode Go nie odczytasz: zużycia w dolarach, liczby tokenów,
+liczby zapytań ani listy użytych modeli. Te dane żyją wyłącznie w konsoli
+[`opencode.ai/auth`](https://opencode.ai/auth), bo konsola uwierzytelnia się
+sesją przeglądarki, a nie kluczem API. Pełna lista endpointów dostępnych z
+kluczem (`/zen/go/v1/usage`, `/zen/go/v1/models`, endpointy inferencji) jest
+zdefiniowana w `packages/console/app/src/lib/inference-proxy.ts`.
 
 ## Ustawienia
 

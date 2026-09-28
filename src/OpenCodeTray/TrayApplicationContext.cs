@@ -218,7 +218,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private void OpenSettings()
     {
         HidePopup();
-        using var form = new SettingsForm(_settings);
+        using var form = new SettingsForm(_settings, _snapshot);
         if (form.ShowDialog() != DialogResult.OK || form.Result is null)
         {
             return;

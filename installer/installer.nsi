@@ -8,7 +8,7 @@ SetCompressor /SOLID lzma
 !define APP_NAME "OpenCode Tray"
 !define APP_EXE "OpenCodeTray.exe"
 !define APP_ID "OpenCodeTray"
-!define APP_VERSION "1.0.0"
+!define APP_VERSION "1.1.0"
 !define APP_PUBLISHER "michalkulik"
 !define APP_URL "https://github.com/michalkulik/opencode-tray"
 !define RUN_KEY "Software\Microsoft\Windows\CurrentVersion\Run"
@@ -20,7 +20,7 @@ InstallDir "$LOCALAPPDATA\Programs\${APP_NAME}"
 InstallDirRegKey HKCU "Software\${APP_ID}" "InstallDir"
 RequestExecutionLevel user
 
-VIProductVersion "1.0.0.0"
+VIProductVersion "1.1.0.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "FileDescription" "${APP_NAME} Setup"
 VIAddVersionKey "FileVersion" "${APP_VERSION}"
